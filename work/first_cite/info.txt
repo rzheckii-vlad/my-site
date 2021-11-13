@@ -1,0 +1,55 @@
+ try:
+            parametrs = soup.find_all('div', class_='flex-base flex-space-between flex-align-start carlot__table-info-row-outer')
+            for div in parametrs[:3]:                
+                print('/'*25)                
+                parametrs_cars = div.find_all('ul')
+                
+                for ul in parametrs_cars:
+                    parametrs_list = ul.find_all('li')
+
+                    for i in parametrs_list:
+                        try:
+                            first_registration = i[1].text.strip()
+                            probeg = i[3].text.strip()
+                            
+                            parametrs_list_finish.append(i)
+            
+                        except Exception as ex:
+                            continue
+
+      parametrs_list_finish = {
+        parametrs_list_finish[0]:parametrs_list_finish[1][:10],
+        parametrs_list_finish[2]:parametrs_list_finish[3],
+        parametrs_list_finish[4]:parametrs_list_finish[5],
+        parametrs_list_finish[6]:parametrs_list_finish[7],
+        parametrs_list_finish[8]:parametrs_list_finish[9],
+        parametrs_list_finish[10]:parametrs_list_finish[11],
+        parametrs_list_finish[12]:parametrs_list_finish[13],
+        parametrs_list_finish[14]:parametrs_list_finish[15],
+        parametrs_list_finish[16]:parametrs_list_finish[17],
+        parametrs_list_finish[18]:parametrs_list_finish[19],
+        parametrs_list_finish[20]:parametrs_list_finish[21],
+        parametrs_list_finish[22]:parametrs_list_finish[23],
+        'other_utilets':parametrs_list_finish[24:]
+    }   
+    
+    with open('work\\first_cite\\cars_info.json', 'w', encoding='utf-8') as file:
+        json.dump(parametrs_list_finish, file, indent=4, ensure_ascii=False)
+
+
+        try:
+            parametrs = soup.find_all('div', class_='flex-base flex-space-between flex-align-start carlot__table-info-row-outer')
+            for div in parametrs[:3]:                
+                print('/'*25)                
+                parametrs_cars = div.find_all('ul')
+
+                try:
+                    first_registration = parametrs_cars[0].find_next().text.strip()
+                    
+                    parametrs_list_finish.append(
+                        first_registration
+
+                    )
+                
+                except Exception as ax:
+                    print(ax)
