@@ -26,10 +26,10 @@ def get_href():
     url = 'https://www.caroutlet.eu/?page=161&sort=promoted_ending_soon&filter%5Bsearch_id%5D='
 
     # Делаем привязку ко времени
-    cur_time = datetime.datetime.now().strftime("%d_%m_%Y_%H_%M")
+    # cur_time = datetime.datetime.now().strftime("%d_%m_%Y_%H_%M")
 
     # Открываем файл csv на запись (прописываем заголовки)
-    with open(f'work\\first_cite\\car_info_{cur_time}.csv', 'w', encoding='utf-8') as file:
+    with open('car_info.csv', 'w', encoding='utf-8') as file:
         writer = csv.writer(file)
         writer.writerow(
             (
@@ -49,6 +49,8 @@ def get_href():
                 'Комплектация'
             )
         )
+    with open('old_links.txt', 'r') as file:
+        old_links = file.read().splitlines()
 
     r = requests.get(url=url, headers=headers)
     soup = BeautifulSoup(r.text, 'lxml')
@@ -67,7 +69,7 @@ def get_href():
         
         cars_list = soup.find('tbody', class_='table__body').find_all('tr', class_='table__row car-row')
         for link in cars_list:
-            cars_data = link.find_all('td')
+            # cars_data = link.find_all('td')
             try:
                 cars_href = link.find('a').get('href')
             except:
@@ -75,16 +77,16 @@ def get_href():
 
             link_to_car.append(cars_href)
 
-    # print(link_to_car)
-
     parametrs_list_finish = []
     
     # Собираем информацию с каждой карточки
-    for url in link_to_car[0:1]:
+    for url in set(link_to_car) - set(old_links):
+    # for url in link_to_car:
+
         r = requests.get(url=url, headers=headers)
 
         soup = BeautifulSoup(r.text, 'lxml')
- 
+
         try:
             parametrs = soup.find_all('div', class_='flex-base flex-space-between flex-align-start carlot__table-info-row-outer')
             
@@ -96,10 +98,9 @@ def get_href():
             model_auto = parametrs[1].find('li', text=re.compile('Марка автомобиля, модель')).find_next_sibling().text.strip()
             modification_auto = parametrs[1].find('li', text=re.compile('Модификация')).find_next_sibling().text.strip()
             power_auto = parametrs[1].find('li', text=re.compile('Мощность')).find_next_sibling().text.strip()
-            color_auto = parametrs[1].find('li', text=re.compile('Цвет')).find_next_sibling().text.strip()
             cuzov_auto = parametrs[1].find('li', text=re.compile('Тип кузова')).find_next_sibling().text.strip()
             dors_count_auto = parametrs[1].find('li', text=re.compile('Количество дверей')).find_next_sibling().text.strip()
-           
+        
             complectations = []
             complectation = parametrs[2].find_all('li')
             for i in complectation:
@@ -110,8 +111,12 @@ def get_href():
             print(ex)
 
         try:
-            price = soup.find('div', class_='item-sidebar__group visible-when-bidding').find('span', class_='input-group__item').find('input').get('value')
-                 
+            color_auto = parametrs[1].find('li', text=re.compile('Цвет')).find_next_sibling().text.strip()
+        except:
+            color_auto = None
+
+        try:
+            price = soup.find('div', class_='item-sidebar__group visible-when-bidding').find('span', class_='input-group__item').find('input').get('value')       
         except Exception as ex:
             print(ex)
 
@@ -127,20 +132,21 @@ def get_href():
                 count = 0
                 
                 for i in images_list:
-                    if not os.path.exists(f'work\\first_cite\\data\\{url[-8:]}'):
-                        os.mkdir(f'work\\first_cite\\data\\{url[-8:]}')
+                    if not os.path.exists(f'data\\{url[-8:]}'):
+                        os.mkdir(f'data\\{url[-8:]}')
                     
                     r = requests.get(url=i)
 
                     count += 1
             
-                    with open(f'work\\first_cite\\data\\{url[-8:]}\\{count}.png', 'wb') as file:
+                    with open(f'data\\{url[-8:]}\\{count}.png', 'wb') as file:
                         file.write(r.content)
 
             # print(images_list)
         except Exception as ex:
             print(ex)
-              
+
+        
         parametrs_list_finish.append(
             {
                 'Ссылка на авто': url,
@@ -159,9 +165,9 @@ def get_href():
                 'Комплектация': complectations_str
             }
         )
-
+                
         # Заполняем нашу таблицу
-        with open(f'work\\first_cite\\car_info_{cur_time}.csv', 'a', encoding='utf-8') as file:
+        with open('car_info.csv', 'a', encoding='utf-8') as file:
             writer = csv.writer(file)
             writer.writerow(
                 (
@@ -183,11 +189,19 @@ def get_href():
             )
 
         print(f'Обработана {page}/{pages_count}')
-        time.sleep(random.randrange(2,4))
-  
+        time.sleep(random.randrange(1,2))
+
+    with open('old_links.txt', 'w', encoding='utf-8') as file:
+        for it in link_to_car:
+            file.write(it)
+            file.write('\n')
+
+    with open('car_info.json', 'w', encoding='utf-8') as file:
+        json.dump(parametrs_list_finish, file, indent=4, ensure_ascii=False)
+
+
 def main():
     get_href()
-
 
 if __name__ == '__main__':
     main()
